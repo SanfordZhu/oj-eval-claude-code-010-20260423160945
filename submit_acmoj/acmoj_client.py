@@ -65,6 +65,7 @@ class ACMOJClient:
         except requests.exceptions.RequestException as e:
             print(f"API Request failed: {e}")
             if 'response' in locals() and response:
+                print(f"Response status: {response.status_code}")
                 print(f"Response text: {response.text}")
             return None
 
@@ -90,6 +91,18 @@ class ACMOJClient:
             self._save_submission_id(result['id'])
 
         return result
+
+    def submit_code(self, problem_id: int, language: str, code: str) -> Optional[Dict]:
+        # For git-based submissions, use the git URL instead
+        if language == "cpp":
+            git_url = "https://github.com/SanfordZhu/oj-eval-claude-code-010-20260423160945.git"
+            return self.submit_git(problem_id, git_url)
+        else:
+            data = {"language": language, "code": code}
+            result = self._make_request("POST", f"/problem/{problem_id}/submit", data=data)
+            if result and 'id' in result:
+                self._save_submission_id(result['id'])
+            return result
 
     def get_submission_detail(self, submission_id: int) -> Optional[Dict]:
         return self._make_request("GET", f"/submission/{submission_id}")
